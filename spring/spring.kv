@@ -1,0 +1,32 @@
+<Rope>:
+    canvas:
+        Line:
+            width: 5
+            joint: "round"
+            points: self.points
+
+<Ball>:
+    size: 70, 70
+    canvas:
+        Ellipse:
+            pos: self.pos
+            size: self.size
+
+<Canvas>:
+    ball: main_ball
+    rope: rope_line
+
+    canvas:
+
+    Label:
+        text: str(root.count)
+        font_size: 70
+        center_x: root.width / 2
+        top: root.top - 20
+
+    Rope:
+        id: rope_line
+        center: root.center
+
+    Ball:
+        id: main_ball
