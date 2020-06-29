@@ -1,0 +1,35 @@
+<NodeBorder>:
+    canvas:
+        Color:
+            rgb: 45/255, 45/255, 45/255
+        Line:
+            rectangle: (self.x, self.y, self.width, self.height)
+
+
+
+<Node>:
+    border: border
+
+    canvas:
+        Color:
+            rgb: self.rgb
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
+    NodeBorder:
+        id: border
+        pos: root.pos
+        size: root.size
+
+
+
+
+<Runner>:
+    canvas.before:
+        Color:
+            rgb: 0.08, 0.08, 0.08
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
