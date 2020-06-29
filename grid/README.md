@@ -1,2 +1,2 @@
-# basic-kivy-projects
-Multiple simple python app made using Kivy framework
+# GRID
+create grid of squares for a path finding algorithm and others
