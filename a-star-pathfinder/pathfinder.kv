@@ -1,0 +1,42 @@
+<LineDraw>:
+    canvas:
+        Color:
+            rgb: 220 / 255, 220 / 255, 220 / 255
+        Line:
+            width: 2
+            points: self.path
+
+<NodeBorder>:
+    canvas:
+        Color:
+            rgb: 45/255, 45/255, 45/255
+        Line:
+            rectangle: (self.x, self.y, self.width, self.height)
+
+
+<Node>:
+    border: border
+
+    canvas:
+        Color:
+            rgb: self.rgb
+        Rectangle:
+            size: self.size
+            pos: self.pos
+
+    NodeBorder:
+        id: border
+        pos: root.pos
+        size: root.size
+
+    Label:
+        center: [root.x + root.size[0]/2, root.y + root.size[1]/2]
+        text: root.label
+        font_size: 10
+
+<Runner>:
+    Button:
+        on_press: root.clear()
+        text: 'press me'
+        size: 100, 30
+        center: root.center_x, root.height - 35
