@@ -1,7 +1,7 @@
 <LineDraw>:
     canvas:
         Color:
-            rgb: 220 / 255, 220 / 255, 220 / 255
+            rgb: self.rgb
         Line:
             width: 2
             points: self.path
@@ -37,6 +37,11 @@
 <Runner>:
     Button:
         on_press: root.clear()
-        text: 'press me'
+        text: 'RESET'
         size: 100, 30
         center: root.center_x, root.height - 35
+
+    Label:
+        pos: root.width - 200, root.height - 87
+        text: root.message
+        font_size: 20

@@ -9,12 +9,17 @@ from kivy.core.window import Window
 from operator import add
 
 CLOCK_TIME = 1.0 / 60.0
-NODES_SIZE = [80, 50]
-WINDOW_SIZE = [1000, 600]
+NODES_SIZE = [100, 50]
+WINDOW_SIZE = [1200, 600]
 
 
 class LineDraw(Widget):
+    rgb = ListProperty([220 / 255, 220 / 255, 220 / 255])
     path = ListProperty([0, 0])
+
+    def reset(self):
+        self.path = [0, 0]
+        self.rgb = [220 / 255, 220 / 255, 220 / 255]
 
 
 class NodeBorder(Widget):
@@ -40,8 +45,9 @@ class Node(Widget):
         self.pos = pos
 
     def convert_to_wall(self):
-        self.rgb = [91 / 255, 54 / 255, 33 / 255]
-        self.passable = False
+        if self.modifiable:
+            self.rgb = [91 / 255, 54 / 255, 33 / 255]
+            self.passable = False
 
     def convert_to_open(self):
         if self.modifiable:
@@ -56,11 +62,20 @@ class Node(Widget):
     def convert_to_start(self):
         self.rgb = [39 / 255, 196 / 255, 125 / 255]
         self.modifiable = False
+        self.passable = True
 
     def convert_to_end(self):
         self.rgb = [239 / 255, 224 / 255, 19 / 255]
         self.modifiable = False
         self.passable = True
+
+    def reset(self):
+        if self.modifiable:
+            self.rgb = [0.08, 0.08, 0.08]
+        self.passable = True
+        self.parent = None
+        self.g_score = 0
+        self.f_score = 0
 
 
 class Runner(Widget):
@@ -69,14 +84,18 @@ class Runner(Widget):
     end_node = None
     nodes = []
     open_set = []
+    finished = False
+    message = StringProperty("")
 
     def clear(self):
-        self.nodes = []
-        self.open_set = []
-        self.start_node = None
-        self.end_node = None
-        self.clear_widgets()
-        Clock.schedule_interval(self.build, 0)
+        self.finished = False
+        self.message = ""
+        self.open_set = [self.start_node]
+        self.line_path.reset()
+        for node in self.nodes:
+            node.reset()
+            if randint(0, 100) <= 35:
+                node.convert_to_wall()
 
     def get_neighbours(self, node):
         node_pos = self.get_node_pos(node.grid_pos)
@@ -108,7 +127,7 @@ class Runner(Widget):
         node_pos = self.get_node_pos(node.grid_pos)
         weight = 1
         if current_node_pos[0] != node_pos[0] and current_node_pos[1] != node_pos[1]:
-            weight = sqrt(2 * pow(weight, 2))
+            weight = sqrt(2)
         return current_node.g_score + weight
 
     def calculate_h_score(self, node):
@@ -116,8 +135,8 @@ class Runner(Widget):
         # end_node_pos = self.get_node_pos(self.end_node.grid_pos)
         # dist_x = abs(node_pos[0] - end_node_pos[0])
         # dist_y = abs(node_pos[1] - end_node_pos[1])
-        dist_x = abs(node.x - self.end_node.x)
-        dist_y = abs(node.y - self.end_node.y)
+        dist_x = abs(node.center_x - self.end_node.center_x)
+        dist_y = abs(node.center_y - self.end_node.center_y)
         # manhattan_dist = dist_x + dist_y
         # euclidean_dist = sqrt(pow(dist_x, 2) + pow(dist_y, 2))
         diagonal_dist = max(dist_x, dist_y)
@@ -163,37 +182,40 @@ class Runner(Widget):
         self.end_node = end_node
 
     def update(self, *args):
-        if len(self.open_set) == 0:
+        if self.finished:
+            pass
+        elif len(self.open_set) == 0:
             print("No path found")
-            Clock.unschedule(self.update)
-            return
+            self.message = "Path Not Found"
+            self.finished = True
+        else:
+            current_node = None
+            for node in self.open_set:
+                if current_node is None or node.f_score < current_node.f_score:
+                    current_node = node
 
-        current_node = None
-        for node in self.open_set:
-            if current_node is None or node.f_score < current_node.f_score:
-                current_node = node
+            if current_node is self.end_node:
+                print("Finished")
+                self.message = "Finished"
+                self.line_path.rgb = [69 / 255, 221 / 255, 31 / 255]
+                self.draw_line_path(self.end_node)
+                self.finished = True
 
-        if current_node is self.end_node:
-            print("Finished")
-            self.draw_line_path(self.end_node)
-            Clock.unschedule(self.update)
-            return
+            current_node.convert_to_passed()
+            self.open_set.remove(current_node)
+            self.draw_line_path(current_node)
+            neighbors = self.get_neighbours(current_node)
+            for node in neighbors:
+                temp_g_score = self.calculate_g_score(current_node, node)
 
-        current_node.convert_to_passed()
-        self.open_set.remove(current_node)
-        self.draw_line_path(current_node)
-        neighbors = self.get_neighbours(current_node)
-        for node in neighbors:
-            temp_g_score = self.calculate_g_score(current_node, node)
-
-            if node.g_score == 0 or temp_g_score < node.g_score:
-                node.parent = current_node
-                node.g_score = temp_g_score
-                node.f_score = node.g_score + self.calculate_h_score(node)
-                # print(node.f_score)
-                if node not in self.open_set:
-                    node.convert_to_open()
-                    self.open_set.append(node)
+                if node.g_score == 0 or temp_g_score < node.g_score:
+                    node.parent = current_node
+                    node.g_score = temp_g_score
+                    node.f_score = temp_g_score + self.calculate_h_score(node)
+                    # print(node.f_score)
+                    if node not in self.open_set:
+                        node.convert_to_open()
+                        self.open_set.append(node)
 
 
 class PathfinderApp(App):
