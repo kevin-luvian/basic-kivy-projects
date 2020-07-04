@@ -1,12 +1,10 @@
 from kivy.app import App
 from kivy.uix.widget import Widget
-from kivy.properties import ListProperty, NumericProperty, StringProperty
-from kivy.uix.behaviors import DragBehavior
+from kivy.properties import ListProperty, StringProperty
 from kivy.vector import Vector
 from kivy.clock import Clock
 from kivy.core.window import Window
-from math import sqrt, pow, degrees, atan2
-from random import randint, randrange
+from random import randint
 
 SEGMENT_SIZE = 20
 
@@ -45,7 +43,7 @@ class Runner(Widget):
     food = None
     commands = []
     is_update = True
-    label = StringProperty("Pantat: 0")
+    label = StringProperty("Snake Body: 0")
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -57,13 +55,12 @@ class Runner(Widget):
         self._keyboard = None
 
     def _on_key_down(self, keyboard, keycode, *args):
-        print('The key', keycode, 'have been pressed')
+        # print('The key', keycode[1], 'have been pressed')
+        # print(self.snake_head.pos)
         if keycode[1] == 'escape':
             keyboard.release()
         elif keycode[1] == 'spacebar':
-            print(self.update)
             self.is_update = not self.is_update
-            print(self.update)
         elif self.is_update and keycode[1] in ['up', 'down', 'left', 'right']:
             if keycode[1] not in self.commands:
                 self.commands.append(keycode[1])
@@ -72,7 +69,7 @@ class Runner(Widget):
         checker = True
         new_pos = None
         while checker:
-            new_pos = [randint(0,(self.width - 50) // SEGMENT_SIZE) * SEGMENT_SIZE,
+            new_pos = [randint(0, (self.width - 50) // SEGMENT_SIZE) * SEGMENT_SIZE,
                        randint(0, (self.height - 50) // SEGMENT_SIZE) * SEGMENT_SIZE]
             checker = False
             if self.snake_head.pos == new_pos:
@@ -91,7 +88,7 @@ class Runner(Widget):
 
     def build(self, *args):
         self.snake_head = Segment()
-        self.snake_head.color = [197 / 255, 14 / 255, 214 / 255]
+        self.snake_head.color = [52 / 255, 158 / 255, 235 / 255]
         self.snake_head.pos = [randint(0, self.width // SEGMENT_SIZE) * SEGMENT_SIZE,
                                randint(0, self.height // SEGMENT_SIZE) * SEGMENT_SIZE]
         self.food = Food()
@@ -114,24 +111,24 @@ class Runner(Widget):
             self.snake_head.move()
             if self.snake_head.pos == self.food.pos:
                 self.create_new_segment(new_pos)
-                self.food.pos = self.create_empty_pos()
-                self.label = "Pantat: " + str(len(self.snake_body))
+                # self.food.pos = self.create_empty_pos()
+                self.label = "Snake Body: " + str(len(self.snake_body))
 
             if self.snake_head.pos[0] < 0:
-                self.snake_head.pos[0] = self.width
-            elif self.snake_head.pos[0] > self.width:
-                self.snake_head.pos[0] = 0
-            elif self.snake_head.pos[1] < 0:
-                self.snake_head.pos[1] = self.height
-            elif self.snake_head.pos[1] > self.height:
-                self.snake_head.pos[1] = 0
+                self.snake_head.pos = [self.width, self.snake_head.pos[1]]
+            elif self.snake_head.pos[0] >= self.width:
+                self.snake_head.pos = [0, self.snake_head.pos[1]]
+            if self.snake_head.pos[1] < 0:
+                self.snake_head.pos = [self.snake_head.pos[0], self.height]
+            elif self.snake_head.pos[1] >= self.height:
+                self.snake_head.pos = [self.snake_head.pos[0], 0]
 
 
 class SnakeApp(App):
     def build(self):
         runner = Runner()
         Clock.schedule_once(runner.build, 0)
-        Clock.schedule_interval(runner.update, 1.0 / 15.0)
+        Clock.schedule_interval(runner.update, 1.0 / 30.0)
         return runner
 
 
