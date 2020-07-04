@@ -1,0 +1,28 @@
+<Food>:
+    canvas:
+        Color:
+            rgb: 28/255, 175/255, 42/255
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<Segment>:
+    canvas:
+        Color:
+            rgb: self.color
+        Rectangle:
+            pos: self.pos
+            size: self.size
+        Color:
+            rgb: 0, 0, 0
+        Line:
+            width: 1
+            points: [[self.pos[0], self.pos[1]], [self.pos[0]+self.size[0], self.pos[1]],[self.pos[0]+self.size[0], self.pos[1]+self.size[1]],[self.pos[0], self.pos[1]+self.size[1]]]
+
+<Runner>:
+    Label:
+        text: "Pantat Snake The Game"
+        pos: root.center_x - 50, root.height-70
+    Label:
+        text: root.label
+        pos: root.width - 150, root.height-70
