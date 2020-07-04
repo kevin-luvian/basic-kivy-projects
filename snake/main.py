@@ -111,7 +111,7 @@ class Runner(Widget):
             self.snake_head.move()
             if self.snake_head.pos == self.food.pos:
                 self.create_new_segment(new_pos)
-                # self.food.pos = self.create_empty_pos()
+                self.food.pos = self.create_empty_pos()
                 self.label = "Snake Body: " + str(len(self.snake_body))
 
             if self.snake_head.pos[0] < 0:
@@ -128,7 +128,7 @@ class SnakeApp(App):
     def build(self):
         runner = Runner()
         Clock.schedule_once(runner.build, 0)
-        Clock.schedule_interval(runner.update, 1.0 / 30.0)
+        Clock.schedule_interval(runner.update, 1.0 / 15.0)
         return runner
 
 
