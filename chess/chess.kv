@@ -1,0 +1,31 @@
+<Unit>:
+    canvas:
+        Color:
+            rgb: self.rgb
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    Label:
+        text: root.name
+        pos: root.pos[0] - root.size[0] / 2, root.pos[1] - root.size[1] / 2
+
+<Grid>:
+    canvas:
+        Color:
+            rgb: self.rgb
+        Rectangle:
+            pos: self.pos
+            size: self.size
+        Color:
+            rgb: .8, .8, .8
+        Line:
+            width: 1.5
+            points: [[self.pos[0], self.pos[1]], [self.pos[0]+self.size[0], self.pos[1]],[self.pos[0]+self.size[0], self.pos[1]+self.size[1]],[self.pos[0], self.pos[1]+self.size[1]], [self.pos[0], self.pos[1]]]
+
+<Runner>:
+    canvas.before:
+        Color:
+            rgb: 0.6, 0.6, 0.6
+        Rectangle:
+            pos: self.pos
+            size: self.size
