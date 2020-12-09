@@ -60,54 +60,65 @@ class Boid(Widget):
         self.constraint_y = y
 
     def check_surrounding_boids(self, surrounding_boids):
-        average_velocity = self.velocity
-        average_position = Vector(self.pos)
-        average_separation = Vector(0, 0)
-        initial_flag = True
+        neighbour_counter = 0
+        separation_counter = 0
+        close_counter = 0
+        aggregate_velocity = None
+        aggregate_position = None
+        aggregate_separation = [0, 0]
         for boid in surrounding_boids:
-            if boid != self and const.BOID_VISIBILITY_RADIUS > self.distance_to_position(boid.pos):
-                average_velocity = self.average_velocity_to_boid(average_velocity, boid)
-                # if initial_flag:
-                #     average_position = Vector(boid.pos)
-                #     average_separation = self.separation_velocity_to_boid(boid)
-                #     initial_flag = False
-                # else:
-                average_position = self.average_position_to_boid(average_position, boid)
-                average_separation = self.average_separation_velocity_to_boid(average_separation, boid)
+            dist = Vector(self.pos).distance(boid.pos)
+            if boid != self and const.BOID_VISIBILITY_RADIUS > dist:
+                neighbour_counter += 1
+                if neighbour_counter == 1:
+                    aggregate_velocity = boid.velocity
+                    aggregate_position = boid.pos
+                else:
+                    aggregate_velocity = self.add_2d_array(aggregate_velocity, boid.velocity)
+                    aggregate_position = self.add_2d_array(aggregate_position, boid.pos)
 
-        average_velocity_vector = (average_velocity - self.velocity).normalize() * const.ALIGNMENT_MULT
-        average_position_vector = (average_position - Vector(self.pos)).normalize() * const.COHESION_MULT
-        average_separation_vector = average_separation * const.SEPARATION_MULT
-        self.acceleration = average_velocity_vector + average_position_vector + average_separation_vector
-        # self.updated_velocity = average_force
+                if 0 < dist < const.BOID_SEPARATION_RADIUS:
+                    separation_counter += 1
+                    aggregate_separation = self.separation_velocity_to_boid(boid)
+                    if dist < 15:
+                        close_counter += 1
 
-    def distance_to_position(self, position):
-        return Vector(self.pos).distance(position)
+        if neighbour_counter > 0:
+            average_velocity = self.mult_2d_array(aggregate_velocity, 1 / neighbour_counter)
+            average_position = self.mult_2d_array(aggregate_position, 1 / neighbour_counter)
+            if separation_counter > 0:
+                average_separation = self.mult_2d_array(aggregate_separation, 1 / separation_counter)
+            else:
+                average_separation = aggregate_separation
 
-    def average_velocity_to_boid(self, velocity, target_boid):
-        return (velocity + target_boid.velocity) / Vector(2, 2)
+            average_velocity_vector = Vector(
+                self.sub_2d_array(average_velocity, self.velocity)).normalize() * const.ALIGNMENT_MULT
+            average_position_vector = Vector(
+                self.sub_2d_array(average_position, self.pos)).normalize() * const.COHESION_MULT
+            average_separation_vector = Vector(average_separation).normalize() * const.SEPARATION_MULT
 
-    def average_position_to_boid(self, position, target_boid):
-        return (Vector(position) + Vector(target_boid.pos)) / Vector(2, 2)
+            if close_counter > 0:
+                average_separation_vector *= 100
 
-    def average_separation_velocity_to_boid(self, average_separation, target_boid):
-        separation_range = 30
-        dist = Vector(self.pos).distance(target_boid.pos)
-        if 0 < dist < separation_range:
-            v_diff = self.separation_velocity_to_boid(target_boid)
-            return (average_separation + v_diff) / Vector(2, 2)
-        return average_separation
+            self.acceleration = average_velocity_vector + average_position_vector + average_separation_vector
 
     def separation_velocity_to_boid(self, target_boid):
         dist = Vector(self.pos).distance(target_boid.pos)
-        v_diff = Vector(self.pos) - Vector(target_boid.pos)
+        v_diff = Vector(self.sub_2d_array(self.pos, target_boid.pos))
         # print("Diff raw", v_diff)
         v_diff = v_diff.normalize()
         # print("Diff normal", v_diff)
         # print("Dist", dist)
-        v_diff /= dist
-        # print("Diff", v_diff)
-        return v_diff
+        return self.mult_2d_array(v_diff, dist)
+
+    def mult_2d_array(self, arr, mult):
+        return [arr[0] * mult, arr[1] * mult]
+
+    def add_2d_array(self, arr_a, arr_b):
+        return [arr_a[0] + arr_b[0], arr_a[1] + arr_b[1]]
+
+    def sub_2d_array(self, arr_a, arr_b):
+        return [arr_a[0] - arr_b[0], arr_a[1] - arr_b[1]]
 
     # def normalize(self, x_max, x_min, x):
     #     return (x - x_min) / x_max - x_min
@@ -118,6 +129,19 @@ class Runner(Widget):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+    def build(self, *args):
+        for i in range(0, 50):
+            new_boid = Boid()
+            new_boid.set_constraints(self.width, self.height)
+            new_boid.pos = self.new_boid_pos()
+            self.add_widget(new_boid)
+            self.boids.append(new_boid)
+
+    def new_boid_pos(self):
+        ran = 100
+        return [randint(self.width / 2 - ran, self.width / 2 + ran),
+                randint(self.height / 2 - ran, self.height / 2 + ran)]
 
     def clock_update(self, *args):
         for boid in self.boids:
@@ -138,7 +162,7 @@ class Runner(Widget):
 class FlockingApp(App):
     def build(self):
         runner = Runner()
-        # Clock.schedule_once(runner.build, 0)
+        Clock.schedule_once(runner.build, 0)
         Clock.schedule_interval(runner.clock_update, 1.0 / 60.0)
         return runner
 

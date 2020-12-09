@@ -20,6 +20,11 @@ class TestBoid(unittest.TestCase):
         v_new = Vector(v_new.x, v_y)
         print("v new", v_new)
 
+    def test_check(self):
+        v_a = Vector(5, 0)
+        print(v_a[0])
+        print(v_a[1])
+
 
 if __name__ == '__main__':
     unittest.main()
