@@ -7,6 +7,7 @@ from kivy.uix.widget import Widget
 
 import const
 import quadtree
+import kdtree
 from boid import Boid
 
 
@@ -26,7 +27,7 @@ class Runner(Widget):
             new_boid = Boid()
             new_boid.set_constraints(self.width, self.height)
             # new_boid.pos = self.new_boid_pos()
-            new_boid.pos = [i*5, i*5]
+            new_boid.pos = [i * 5, i * 5]
             self.add_widget(new_boid)
             self.boids.append(new_boid)
 
@@ -36,6 +37,24 @@ class Runner(Widget):
                 randint(self.height / 2 - ran, self.height / 2 + ran)]
 
     def clock_update(self, *args):
+        self.update_on_kdtree()
+        # self.update_on_quadtree()
+        # self.update_on_brute_force()
+
+        # with ThreadPoolExecutor(max_workers=10) as executor:
+        #     for boid in self.boids:
+        #         executor.submit(boid.move)
+        for boid in self.boids:
+            boid.move()
+
+    def update_on_kdtree(self):
+        kd_tree = kdtree.generate_kdtree(self.boids)
+        for boid in self.boids:
+            radius = kdtree.create_boid_visibility_radius(boid)
+            surrounding_boid = kd_tree.query(radius)
+            boid.check_surrounding_boids(surrounding_boid)
+
+    def update_on_quadtree(self):
         qtree = quadtree.generate_quadtree(self.boids, self.width, self.height)
         for boid in self.boids:
             radius = quadtree.create_boid_visibility_radius(boid)
@@ -44,11 +63,9 @@ class Runner(Widget):
             # print("Surround", "x", boid.pos[0], "y", boid.pos[1], len(surrounding_boid))
             # print("Radius", radius.x, radius.y, radius.w, radius.h)
 
-        # with ThreadPoolExecutor(max_workers=10) as executor:
-        #     for boid in self.boids:
-        #         executor.submit(boid.move)
+    def update_on_brute_force(self):
         for boid in self.boids:
-            boid.move()
+            boid.check_surrounding_boids(self.boids)
 
     def on_touch_down(self, touch):
         new_boid = Boid()
